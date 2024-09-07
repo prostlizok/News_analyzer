@@ -1,0 +1,6 @@
+services:
+  core_api:
+    build: .
+    container_name: "news_analyzer"
+    ports:
+      - "8000:8000"
