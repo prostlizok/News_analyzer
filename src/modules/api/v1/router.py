@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from services import CollectService
+from src.modules.api.v1.services import CollectService
 
 router = APIRouter(prefix="/v1")
 
