@@ -6,10 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.common.logger import init_logger
 from src.modules.api.v1.router import router as api_v1_router
 from src.modules.db.services import init_db
+from src.modules.telegram_parser.app import startup
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_logger()
+    await startup()
     await init_db()
     yield
 
