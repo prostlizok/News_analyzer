@@ -8,13 +8,9 @@ import os
 
 load_dotenv()
 
-
-
-OPENAI_MODEL_NAME = "gpt-4o-mini"
-
-llm = ChatOpenAI(model=OPENAI_MODEL_NAME, temperature=0)
-
-load_dotenv()
+def _get_llm(model_name: str) -> ChatOpenAI:
+    llm = ChatOpenAI(model=model_name, temperature=0)
+    return llm
 
 input_json = [
     {
@@ -36,10 +32,10 @@ def create_json_output():
 
 
 def collect_info(input_json: List[dict]) -> List[dict]:
-    extracted_info = []
-    
+    llm = _get_llm("gpt-4o-mini")    
     for entry in input_json:
         text = entry["text"]
+
         try:
 
             structured_llm = llm.with_structured_output(InvoiceJson)
@@ -48,14 +44,16 @@ def collect_info(input_json: List[dict]) -> List[dict]:
                 [("system", system_prompt), ("human", "{input}")]
             )
             few_shot_structured_llm = prompt | structured_llm
+            
             input_prompt = f"raw_text: {text}"
             data = few_shot_structured_llm.invoke({"input": input_prompt})
-            print(data)
+            entry['emergency_info'] = data
 
         except Exception as e:
             print(e)
-        #extracted_info.append(structured_output.dict())
+        
+    return input_json
     
-    #return extracted_info
 
-collect_info(input_json=input_json)
+jsonr = collect_info(input_json=input_json)
+print(jsonr)
