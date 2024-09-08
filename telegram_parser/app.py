@@ -3,7 +3,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timezone, timedelta
 from telethon import TelegramClient
 from llm import collect_info, get_updated_data
-
+import httpx
+from schemas import RegionInfo
 
 app = FastAPI()
 api_id = '23820475'
@@ -21,21 +22,40 @@ async def shutdown():
 # Функція, яка збирає новини кожну хвилину
 async def fetch_news():
     data_json = []
-    channel = 'uliana_channel'  
+    channel = 'test_news_channel_11'  
 
     channel_entity = await client.get_entity(channel)
     async for message in client.iter_messages(channel_entity):
-        if (datetime.now(tz=timezone.utc) - message.date) <= timedelta(minutes=1) and message.text:
-                    message_data = {
-                        "text": message.text,
-                        "date": message.date.isoformat(), 
-                        "channel": "monitorwarr",
-                        "link": "https://t.me/monitorwarr/23894" 
-                    }
-                    data_json.append(message_data)
+        if (datetime.now(tz=timezone.utc) - message.date) <= timedelta(minutes=0.3) and message.text:
+            message_data = {
+                            "text": message.text,
+                            "date": message.date.isoformat(), 
+                            "channel": "monitorwarr",
+                            "link": "https://t.me/test_news_channel_11" 
+                        }
+            data_json.append(message_data)
     output_json = collect_info(input_json=data_json)
     print("Inserting data to db")
-    #insert_data_to_db(output_json)
+    print(output_json)
+    
+    async with httpx.AsyncClient() as client2:
+        for item in output_json:
+            emergency_info = item.get('emergency_info')
+            for region in emergency_info:
+                region_info = RegionInfo(
+                    city=region['city'],
+                    explosion=region['explosion'],
+                    num_of_explosions=region['num_of_explosions'],
+                    victims=region['victims'],
+                    damage=region['damage'],
+                    num_of_victims=region['num_of_victims']
+                )
+                response = await client2.post("http://localhost:8000/v1/region_info", json=region_info.dict())
+                if response.status_code == 200:
+                    print(f"Successfully inserted data for {region['city']}")
+                else:
+                    print(f"Failed to insert data for {region['city']}: {response.text}")
+
     print(f"Знайдено {len(output_json)} нових повідомлень з каналу monitorwarr")
 
 # Функція, яка збирає новини кожні 30 хвилин

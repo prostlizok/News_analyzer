@@ -22,3 +22,11 @@ class RegionInfoUpd(BaseModel):
 
 class InvoiceJsonUpd(BaseModel):
     info: List[RegionInfoUpd] = Field(description="Info collected about each region mentioned in the text to update")
+
+# class RegionInfoCreate(BaseModel):
+#     city: str
+#     explosion: bool
+#     num_of_explosions: int
+#     damage: bool
+#     victims: bool
+#     num_of_victims: int
