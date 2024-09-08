@@ -16,7 +16,9 @@ from telegram.ext import (
     CallbackContext
 )
 
-TOKEN = os.environ.get("TELEGRAM_TOKEN")
+# TOKEN = os.environ.get("TELEGRAM_TOKEN")
+TOKEN = "7423356159:AAGDwaMj-3aCLdiI2dEYRLq_DvIpJNyZExA"
+
 LOCATIONS_FILE = "ua.csv"
 DATA_DIR = "./user_data"
 

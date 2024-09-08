@@ -2,7 +2,7 @@
     const regions = document.querySelectorAll('.region');
     const tooltip = document.getElementById('tooltip');
 
-    fetchNewsData().then(newsData => {
+    function updateMap(newsData) {
       regions.forEach(region => {
         const regionId = region.id;
         const regionData = newsData.find(item => item.region === regionId) || {};
@@ -57,45 +57,52 @@
           addHelpRequestMarkers(region, classifications);
         }
       });
-    });
+    }
+
+    // Initial fetch
+    fetchNewsData().then(updateMap);
+
+    // Set up interval for periodic updates
+    setInterval(() => {
+      fetchNewsData().then(updateMap);
+    }, 5000); // 5000 milliseconds = 5 seconds
   });
 
   async function fetchNewsData() {
-    return [
-      {
-        region: "UA-9",
-        explosions: 15,
-        destruction: true,
-        casualties: 3,
-        housing: 10,
-        infrastructure: 8,
-        food: 15,
-        clothing: 5,
-        medicine: 7
-      },
-      {
-        region: "UA-6",
-        explosions: 7,
-        destruction: true,
-        casualties: 0,
-        housing: 0,
-        infrastructure: 0,
-        food: 0,
-        clothing: 0,
-        medicine: 0
-      },
-      {
-        region: "UA-13",
-        explosions: 0,
-        destruction: false,
-        casualties: 0,
-        housing: 2,
-        infrastructure: 4,
-        food: 0,
-        clothing: 0,
-        medicine: 3
+    console.log("Extracting data from server");
+    try {
+      const [regionResponse, requestsResponse] = await Promise.all([
+        fetch('http://localhost:8000/v1/region_info'),
+        fetch('http://localhost:8000/v1/requests_info')
+      ]);
+
+      if (!regionResponse.ok || !requestsResponse.ok) {
+        throw new Error('Failed to fetch data');
       }
-    ];
+
+      const regionData = await regionResponse.json();
+      console.log("Region data:", regionData);
+      const requestsData = await requestsResponse.json();
+      console.log("Requests data:", requestsData);
+
+      // Merge the data
+      const mergedData = regionData.map(region => {
+        const requests = requestsData.filter(request => request.region === region.region);
+        return {
+          ...region,
+          housing: requests.reduce((sum, req) => sum + req.housing, 0),
+          infrastructure: requests.reduce((sum, req) => sum + req.infrastructure, 0),
+          food: requests.reduce((sum, req) => sum + req.food, 0),
+          clothing: requests.reduce((sum, req) => sum + req.clothing, 0),
+          medicine: requests.reduce((sum, req) => sum + req.medicine, 0)
+        };
+      });
+
+      return mergedData;
+    } catch (error) {
+      console.error('Error fetching news data:', error);
+      return [];
+    }
   }
 
   function getColorBasedOnExplosions(explosions) {
