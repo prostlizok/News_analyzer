@@ -2,6 +2,121 @@
     const regions = document.querySelectorAll('.region');
     const tooltip = document.getElementById('tooltip');
 
+    // Add this at the top of your file
+    const regionMappings = {
+      "Черкаська область": "UA-03",
+      "Харківська область": "UA-09",
+      "Хмельницька область": "UA-11",
+      "Київ": "UA-12",
+      "Київська область": "UA-13",
+      "Миколаївська область": "UA-17",
+      "Одеська область": "UA-18",
+      "Житомирська область": "UA-27"
+      // Add other regions here...
+    };
+
+    function getRegionIdFromMapping(regionName) {
+      const normalizedRegionName = regionName.trim().toLowerCase();
+      for (const [key, value] of Object.entries(regionMappings)) {
+        if (key.toLowerCase() === normalizedRegionName) {
+          return value;
+        }
+      }
+      console.warn(`Region not found in mappings: ${regionName}`);
+      return 'Unknown';
+    }
+
+    async function fetchNewsData() {
+      console.log("Extracting data from server");
+      try {
+        const [regionResponse, requestsResponse] = await Promise.all([
+          fetch('http://localhost:8000/v1/region_info'),
+          fetch('http://localhost:8000/v1/requests_info')
+        ]);
+    
+        if (!regionResponse.ok || !requestsResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+    
+        const regionData = await regionResponse.json();
+        console.log("Region data:", regionData);
+        const requestsData = await requestsResponse.json();
+        console.log("Requests data:", requestsData);
+    
+        // Create a map to store merged data by city
+        const mergedDataMap = new Map();
+    
+        // Process region data
+        regionData.forEach(region => {
+          const existingData = mergedDataMap.get(region.city) || {
+            explosions: 0,
+            destruction: false,
+            casualties: 0,
+            housing: 0,
+            infrastructure: 0,
+            food: 0,
+            clothing: 0,
+            medicine: 0,
+            region: ''
+          };
+    
+          mergedDataMap.set(region.city, {
+            ...existingData,
+            explosions: existingData.explosions + (region.num_of_explosions || 0),
+            destruction: existingData.destruction || region.damage,
+            casualties: existingData.casualties + (region.num_of_victims || 0)
+          });
+        });
+    
+        // Process requests data
+        requestsData.forEach(request => {
+          const cityData = mergedDataMap.get(request.city) || {
+            explosions: 0,
+            destruction: false,
+            casualties: 0,
+            housing: 0,
+            infrastructure: 0,
+            food: 0,
+            clothing: 0,
+            medicine: 0,
+            region: ''
+          };
+    
+          // Map region name to SVG ID using the new function
+          cityData.region = getRegionIdFromMapping(request.region);
+    
+          // Increment the appropriate category
+          switch (request.category) {
+            case 'Відбудова житлових будинків🏡':
+              cityData.housing++;
+              break;
+            case 'Відбудова критичної інфраструктури🏥':
+              cityData.infrastructure++;
+              break;
+            case 'Їжа та продовольчі товари🍎':
+              cityData.food++;
+              break;
+            case 'Одяг👕':
+              cityData.clothing++;
+              break;
+            case 'Медикаменти та засоби особистої гігієни💊':
+              cityData.medicine++;
+              break;
+          }
+    
+          mergedDataMap.set(request.city, cityData);
+        });
+    
+        // Convert the map to an array
+        const mergedData = Array.from(mergedDataMap.values());
+        console.log("Merged data:", mergedData);
+        return mergedData;
+      } catch (error) {
+        console.error('Error fetching news data:', error);
+        return [];
+      }
+    }
+    
     function updateMap(newsData) {
       regions.forEach(region => {
         const regionId = region.id;
@@ -67,43 +182,6 @@
       fetchNewsData().then(updateMap);
     }, 5000); // 5000 milliseconds = 5 seconds
   });
-
-  async function fetchNewsData() {
-    console.log("Extracting data from server");
-    try {
-      const [regionResponse, requestsResponse] = await Promise.all([
-        fetch('http://localhost:8000/v1/region_info'),
-        fetch('http://localhost:8000/v1/requests_info')
-      ]);
-
-      if (!regionResponse.ok || !requestsResponse.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
-      const regionData = await regionResponse.json();
-      console.log("Region data:", regionData);
-      const requestsData = await requestsResponse.json();
-      console.log("Requests data:", requestsData);
-
-      // Merge the data
-      const mergedData = regionData.map(region => {
-        const requests = requestsData.filter(request => request.region === region.region);
-        return {
-          ...region,
-          housing: requests.reduce((sum, req) => sum + req.housing, 0),
-          infrastructure: requests.reduce((sum, req) => sum + req.infrastructure, 0),
-          food: requests.reduce((sum, req) => sum + req.food, 0),
-          clothing: requests.reduce((sum, req) => sum + req.clothing, 0),
-          medicine: requests.reduce((sum, req) => sum + req.medicine, 0)
-        };
-      });
-
-      return mergedData;
-    } catch (error) {
-      console.error('Error fetching news data:', error);
-      return [];
-    }
-  }
 
   function getColorBasedOnExplosions(explosions) {
     const maxExplosions = 20;
@@ -179,3 +257,4 @@
       }
     });
   }
+

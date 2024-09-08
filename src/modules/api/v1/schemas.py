@@ -15,6 +15,7 @@ class RequestInfoCreate(BaseModel):
     lat: float
     lng: float
     contact: str
+    region: str
 
 
 class RequestInfo(RequestInfoCreate):

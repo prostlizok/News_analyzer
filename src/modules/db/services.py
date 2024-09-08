@@ -50,7 +50,8 @@ async def create_user_request_table(db: AsyncSession, table_name: str):
         city VARCHAR(100),
         lat FLOAT,
         lng FLOAT,
-        contact VARCHAR(100)
+        contact VARCHAR(100),
+        region VARCHAR(100)
     )
     """))
     print(f"Table '{table_name}' created successfully")
@@ -69,8 +70,8 @@ async def insert_region_info(db: AsyncSession, table_name: str, region_info: Reg
 
 async def insert_user_request(db: AsyncSession, table_name: str, user_request: RequestInfoCreate):
     query = text(f"""
-    INSERT INTO {table_name} (category, city, lat, lng, contact)
-    VALUES (:category, :city, :lat, :lng, :contact)
+    INSERT INTO {table_name} (category, city, lat, lng, contact, region)
+    VALUES (:category, :city, :lat, :lng, :contact, :region)
     RETURNING id
     """)
     result = await db.execute(query, user_request.dict())
