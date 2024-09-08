@@ -15,16 +15,17 @@ from telegram.ext import (
     CallbackContext
 )
 
-TOKEN = "7423356159:AAGDwaMj-3aCLdiI2dEYRLq_DvIpJNyZExA"
+TOKEN = os.environ.get("TELEGRAM_TOKEN")
 LOCATIONS_FILE = "ua.csv"
 DATA_DIR = "./user_data"
-DB_PARAMS = {
-    "dbname": "tg_data_base",
-    "user": "postgres",
-    "password": "123",
-    "host": "localhost",
-    "port": "5432"
-}
+
+# DB_PARAMS = {
+#     "dbname": "tg_data_base",
+#     "user": "postgres",
+#     "password": "123",
+#     "host": "localhost",
+#     "port": "5432"
+# }
 
 locations_df = pd.read_csv(LOCATIONS_FILE)
 settlements = list(locations_df.iloc[:, 0])
