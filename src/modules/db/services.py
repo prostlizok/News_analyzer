@@ -25,9 +25,9 @@ async def init_db():
         pass
 
 
-async def create_table(db: AsyncSession):
-    await db.execute(text("""
-    CREATE TABLE IF NOT EXISTS region_info (
+async def create_table(db: AsyncSession, table_name: str):
+    await db.execute(text(f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
         id SERIAL PRIMARY KEY,
         city VARCHAR(100),
         explosion BOOLEAN,
@@ -37,37 +37,38 @@ async def create_table(db: AsyncSession):
         num_of_victims INT
     )
     """))
-    print("Table created successfully")
+    print(f"Table '{table_name}' created successfully")
     await db.commit()
 
 
-async def insert_region_info(db: AsyncSession, region_info: RegionInfoCreate):    
-    result = await db.execute(text("""
-    INSERT INTO region_info (city, explosion, num_of_explosions, damage, victims, num_of_victims)
+async def insert_region_info(db: AsyncSession, table_name: str, region_info: RegionInfoCreate):
+    query = text(f"""
+    INSERT INTO {table_name} (city, explosion, num_of_explosions, damage, victims, num_of_victims)
     VALUES (:city, :explosion, :num_of_explosions, :damage, :victims, :num_of_victims)
     RETURNING id
-    """), region_info.dict())
+    """)
+    result = await db.execute(query, region_info.dict())
     await db.commit()
-    print("Data inserted successfully")
+    print(f"Data inserted successfully into {table_name}")
     return result.scalar_one()
 
 
-async def get_all_region_info(db: AsyncSession):
-    result = await db.execute(text("SELECT * FROM region_info"))
+async def get_all_region_info(db: AsyncSession, table_name: str):
+    result = await db.execute(text(f"SELECT * FROM {table_name}"))
     rows = result.fetchall()
     return [dict(row._mapping) for row in rows]  # Convert Row objects to dictionaries
 
 
-async def delete_region_info(db: AsyncSession, region_id: int):
-    result = await db.execute(text("DELETE FROM region_info WHERE id = :id"), {"id": region_id})
+async def delete_region_info(db: AsyncSession, table_name: str, region_id: int):
+    result = await db.execute(text(f"DELETE FROM {table_name} WHERE id = :id"), {"id": region_id})
     await db.commit()
     return result.rowcount > 0
 
 
-async def delete_all_region_info(db: AsyncSession):
-    await db.execute(text("DROP TABLE IF EXISTS region_info"))
+async def delete_all_region_info(db: AsyncSession, table_name: str):
+    await db.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
     await db.commit()
 
 
-async def create_region_info(db: AsyncSession, region_info: RegionInfoCreate):
-    return await insert_region_info(db, region_info)
+async def create_region_info(db: AsyncSession, table_name: str, region_info: RegionInfoCreate):
+    return await insert_region_info(db, table_name, region_info)

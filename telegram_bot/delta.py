@@ -34,21 +34,21 @@ for i in list(locations_df.iloc[:, 0]):
     settlements_upd.append([i])
 
 
-def add_user_request(category, city, lan, lng, contact):
-    try:
-        conn = psycopg2.connect(**DB_PARAMS)
-        print("Connected to the database successfully!")
+# def add_user_request(category, city, lan, lng, contact):
+#     try:
+#         conn = psycopg2.connect(**DB_PARAMS)
+#         print("Connected to the database successfully!")
 
-        cur = conn.cursor()
+#         cur = conn.cursor()
 
-        cur.execute("INSERT INTO user_requests (category, city, latitude, longitude, contact) "
-                    "VALUES (%s, %s, %s, %s, %s)", (category, city, float(lan), float(lng), contact))
-        conn.commit()
+#         cur.execute("INSERT INTO user_requests (category, city, latitude, longitude, contact) "
+#                     "VALUES (%s, %s, %s, %s, %s)", (category, city, float(lan), float(lng), contact))
+#         conn.commit()
 
-        cur.close()
+#         cur.close()
 
-    except Exception as e:
-        print(f"Error: {e}")
+#     except Exception as e:
+#         print(f"Error: {e}")
 
 
 logging.basicConfig(
