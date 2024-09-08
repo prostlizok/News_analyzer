@@ -1,21 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from src.modules.db.database_service import (
+from src.modules.db.services import (
     get_db_session, create_table, insert_region_info, 
     get_all_region_info, delete_region_info, delete_all_region_info
 )
 from src.modules.api.v1.schemas import RegionInfoCreate, RegionInfo
 
+
 router = APIRouter(prefix="/v1")
 
-# Remove or comment out this line if CollectService is not used
-# service = CollectService()
 
 @router.post(path="/collect_info")
 async def generate_pipeline_response():
     return await service.get_pipeline_response()
-
 
 @router.post("/create_table")
 async def create_region_info_table(db: AsyncSession = Depends(get_db_session)):
@@ -40,6 +38,9 @@ async def remove_region_info(region_id: int, db: AsyncSession = Depends(get_db_s
         raise HTTPException(status_code=404, detail="Region info not found")
 
 @router.delete("/region_info")
-async def delete_all_region_info(db: AsyncSession = Depends(get_db_session)):
-    await delete_all_region_info(db)
-    return {"message": "All region info deleted"}
+async def delete_all_region_info_route(db: AsyncSession = Depends(get_db_session)):
+    try:
+        await delete_all_region_info(db)
+        return {"message": "All region info deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

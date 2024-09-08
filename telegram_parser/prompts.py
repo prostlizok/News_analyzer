@@ -24,3 +24,28 @@ json_structure = """{{
   "channel": "monitorwarr",
   "link": "https://t.me/monitorwarr/23895"
 }}"""
+
+
+system_message_upd = """
+You are an expert news analyst working in the war field, specifically analyzing events in Ukraine related to the war.
+Your task is to analyze war-related news articles written in Ukrainian.
+Extract relevant information from the provided text and map it to the corresponding keys in the JSON structure.
+The fields should be as in the example, do not add new ones and do not take away the ones specified
+The city should be in the nominative case in Ukrainian with a capital letter. For example, Павлоград
+if there is no mention of victims or destruction in the corresponding field, the field becomes False
+
+victims: A boolean flag that indicates whether there are any victims (injured or dead) mentioned (True if victims are present, False otherwise).
+damage : True if there was damage to buildings or property and a False if there was none or only minor damage
+num_of_victims: The total number of victims, calculated as the sum of injured and dead persons.
+
+Here are some examples, I'm gonna provide you the raw_texts and json structure.
+raw_texts:  "Рятувальники розбирають завали у Києві, уже знайдено 10 тіл"
+json_structure: {json_structure}
+"""
+
+json_structure_upt = """{{ 
+  'city': 'Київ',
+  'victims': True,
+  'damage': True, 
+  'num_of_victims': 10
+}}"""
