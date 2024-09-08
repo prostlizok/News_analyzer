@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import os
 import psycopg2
+import aiohttp
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -19,36 +20,12 @@ TOKEN = os.environ.get("TELEGRAM_TOKEN")
 LOCATIONS_FILE = "ua.csv"
 DATA_DIR = "./user_data"
 
-# DB_PARAMS = {
-#     "dbname": "tg_data_base",
-#     "user": "postgres",
-#     "password": "123",
-#     "host": "localhost",
-#     "port": "5432"
-# }
 
 locations_df = pd.read_csv(LOCATIONS_FILE)
 settlements = list(locations_df.iloc[:, 0])
 settlements_upd = []
 for i in list(locations_df.iloc[:, 0]):
     settlements_upd.append([i])
-
-
-# def add_user_request(category, city, lan, lng, contact):
-#     try:
-#         conn = psycopg2.connect(**DB_PARAMS)
-#         print("Connected to the database successfully!")
-
-#         cur = conn.cursor()
-
-#         cur.execute("INSERT INTO user_requests (category, city, latitude, longitude, contact) "
-#                     "VALUES (%s, %s, %s, %s, %s)", (category, city, float(lan), float(lng), contact))
-#         conn.commit()
-
-#         cur.close()
-
-#     except Exception as e:
-#         print(f"Error: {e}")
 
 
 logging.basicConfig(
@@ -153,21 +130,20 @@ async def automated_name(update: Update, context: ContextTypes.DEFAULT_TYPE, use
     )
     logger.info(f"User name: {user_data['contact']}")
 
-    user_id = user.id
-    file_path = os.path.join(DATA_DIR, f'user_{user_id}.json')
+    # user_id = user.id
+    # file_path = os.path.join(DATA_DIR, f'user_{user_id}.json')
 
-    with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(user_data, f, ensure_ascii=False, indent=4)
+    # with open(file_path, 'w', encoding='utf-8') as f:
+    #     json.dump(user_data, f, ensure_ascii=False, indent=4)
 
-    api_url = "http://localhost:8000/v1/request_collection"  
+    api_url = "http://localhost:8000/v1/requests_info"  
     
     payload = {
+        "category": user_data['request'],
         "city": user_data['city'],
-        "explosion": False,  
-        "num_of_explosions": 0,
-        "damage": False,
-        "victims": False,
-        "num_of_victims": 0,
+        "lat": float(user_data['lat']),  
+        "lng": float(user_data['lng']),
+        "contact": user_data['contact']
     }
 
     async with aiohttp.ClientSession() as session:
@@ -177,8 +153,6 @@ async def automated_name(update: Update, context: ContextTypes.DEFAULT_TYPE, use
             else:
                 logger.error(f"Failed to insert data via API. Status: {response.status}")
     
-    # add_user_request(user_data['request'], user_data['city'], user_data['lat'], user_data['lng'], user_data['contact'])
-
     return ConversationHandler.END
 
 
@@ -211,7 +185,24 @@ async def handle_user_input(update: Update, context: CallbackContext):
         "Дякую! Твої дані були збережені.\n"
         "Наш менеджер зв'яжеться з тобою найближчим часом❤️"
     )
-    add_user_request(user_data['request'], user_data['city'], user_data['lat'], user_data['lng'], user_data['contact'])
+    
+    api_url = "http://localhost:8000/v1/requests_info"  
+    payload = {
+        "category": user_data['request'],
+        "city": user_data['city'],
+        "lat": float(user_data['lat']),  
+        "lng": float(user_data['lng']),
+        "contact": user_data['contact']
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(api_url, json=payload) as response:
+            if response.status == 200:
+                logger.info("Data inserted successfully via API")
+            else:
+                logger.error(f"Failed to insert data via API. Status: {response.status}")
+
+    # add_user_request(user_data['request'], user_data['city'], user_data['lat'], user_data['lng'], user_data['contact'])
 
     return ConversationHandler.END
 

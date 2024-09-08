@@ -8,6 +8,21 @@ class RegionInfoCreate(BaseModel):
     victims: bool
     num_of_victims: int
 
+
+class RequestInfoCreate(BaseModel):
+    category: str
+    city: str
+    lat: float
+    lng: float
+    contact: str
+
+
+class RequestInfo(RequestInfoCreate):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 class RegionInfo(RegionInfoCreate):
     id: int
 

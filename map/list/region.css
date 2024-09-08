@@ -1,0 +1,27 @@
+* {
+    box-sizing: border-box;
+  }
+svg {
+    margin: 0;
+    fill: rgb(5, 2, 140);
+}
+section {
+    display: flex;
+}
+.region {
+    width: 600px;
+}
+
+  form {
+    margin: 32px;
+  }
+
+  div {
+    margin: 8px;
+  }
+  .classification {
+    margin: 0;
+  }
+  .classification_list {
+    list-style: none;
+  }

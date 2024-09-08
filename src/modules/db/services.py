@@ -4,7 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.modules.api.v1.schemas import RegionInfoCreate
+from src.modules.api.v1.schemas import RegionInfoCreate, RequestInfoCreate
 
 DATABASE_URL = "postgresql+asyncpg://myuser:mypassword@db/mydatabase"
 
@@ -46,12 +46,11 @@ async def create_user_request_table(db: AsyncSession, table_name: str):
     await db.execute(text(f"""
     CREATE TABLE IF NOT EXISTS {table_name} (
         id SERIAL PRIMARY KEY,
+        category VARCHAR(100),
         city VARCHAR(100),
-        explosion BOOLEAN,
-        num_of_explosions INT,
-        damage BOOLEAN,
-        victims BOOLEAN,
-        num_of_victims INT
+        lat FLOAT,
+        lng FLOAT,
+        contact VARCHAR(100)
     )
     """))
     print(f"Table '{table_name}' created successfully")
@@ -66,6 +65,17 @@ async def insert_region_info(db: AsyncSession, table_name: str, region_info: Reg
     result = await db.execute(query, region_info.dict())
     await db.commit()
     print(f"Data inserted successfully into {table_name}")
+    return result.scalar_one()
+
+async def insert_user_request(db: AsyncSession, table_name: str, user_request: RequestInfoCreate):
+    query = text(f"""
+    INSERT INTO {table_name} (category, city, lat, lng, contact)
+    VALUES (:category, :city, :lat, :lng, :contact)
+    RETURNING id
+    """)
+    result = await db.execute(query, user_request.dict())
+    await db.commit()
+    print(f"User request data inserted successfully into {table_name}")
     return result.scalar_one()
 
 
@@ -88,3 +98,8 @@ async def delete_all_region_info(db: AsyncSession, table_name: str):
 
 async def create_region_info(db: AsyncSession, table_name: str, region_info: RegionInfoCreate):
     return await insert_region_info(db, table_name, region_info)
+
+async def get_all_request_info(db: AsyncSession, table_name: str):
+    result = await db.execute(text(f"SELECT * FROM {table_name}"))
+    rows = result.fetchall()
+    return [dict(row._mapping) for row in rows]

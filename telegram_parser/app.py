@@ -26,7 +26,7 @@ async def fetch_news():
 
     channel_entity = await client.get_entity(channel)
     async for message in client.iter_messages(channel_entity):
-        if (datetime.now(tz=timezone.utc) - message.date) <= timedelta(minutes=0.3) and message.text:
+        if (datetime.now(tz=timezone.utc) - message.date) <= timedelta(minutes=0.5) and message.text:
             message_data = {
                             "text": message.text,
                             "date": message.date.isoformat(), 
@@ -75,7 +75,7 @@ async def fetch_news_from_other_channel():
 
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(fetch_news, 'interval', minutes=0.1, max_instances=1)
+scheduler.add_job(fetch_news, 'interval', minutes=0.5, max_instances=5)
 scheduler.add_job(fetch_news_from_other_channel, 'interval', minutes=30)  
 scheduler.start()
 

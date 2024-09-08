@@ -3,9 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from src.modules.db.services import (
     get_db_session, create_region_table, create_user_request_table,insert_region_info, 
-    get_all_region_info, delete_region_info, delete_all_region_info
+    get_all_region_info, delete_region_info, delete_all_region_info, insert_user_request,
+    get_all_request_info  # Add this import
 )
-from src.modules.api.v1.schemas import RegionInfoCreate, RegionInfo
+from src.modules.api.v1.schemas import RegionInfoCreate, RegionInfo, RequestInfoCreate, RequestInfo
 
 
 router = APIRouter(prefix="/v1")
@@ -31,9 +32,18 @@ async def add_region_info(region_info: RegionInfoCreate, table_name: str = "regi
     result = await insert_region_info(db, table_name, region_info)
     return {"message": "Region info inserted", "id": result}
 
+@router.post("/requests_info")
+async def add_region_info(requests_info: RequestInfoCreate, table_name: str = "requests_info", db: AsyncSession = Depends(get_db_session)):
+    result = await insert_user_request(db, table_name, requests_info)
+    return {"message": "Request info inserted", "id": result}
+
 @router.get("/region_info", response_model=List[RegionInfo])
 async def get_region_info(table_name: str = "region_info", db: AsyncSession = Depends(get_db_session)):
     return await get_all_region_info(db, table_name)
+
+@router.get("/requests_info", response_model=List[RequestInfo])
+async def get_requests_info(table_name: str = "requests_info", db: AsyncSession = Depends(get_db_session)):
+    return await get_all_request_info(db, table_name)
 
 @router.delete("/region_info/{region_id}")
 async def remove_region_info(region_id: int = 1, table_name: str = "region_info", db: AsyncSession = Depends(get_db_session)):
