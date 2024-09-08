@@ -25,7 +25,7 @@ async def init_db():
         pass
 
 
-async def create_table(db: AsyncSession, table_name: str):
+async def create_region_table(db: AsyncSession, table_name: str):
     await db.execute(text(f"""
     CREATE TABLE IF NOT EXISTS {table_name} (
         id SERIAL PRIMARY KEY,
@@ -40,6 +40,22 @@ async def create_table(db: AsyncSession, table_name: str):
     print(f"Table '{table_name}' created successfully")
     await db.commit()
 
+
+async def create_user_request_table(db: AsyncSession, table_name: str):
+    # for later
+    await db.execute(text(f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
+        id SERIAL PRIMARY KEY,
+        city VARCHAR(100),
+        explosion BOOLEAN,
+        num_of_explosions INT,
+        damage BOOLEAN,
+        victims BOOLEAN,
+        num_of_victims INT
+    )
+    """))
+    print(f"Table '{table_name}' created successfully")
+    await db.commit()
 
 async def insert_region_info(db: AsyncSession, table_name: str, region_info: RegionInfoCreate):
     query = text(f"""

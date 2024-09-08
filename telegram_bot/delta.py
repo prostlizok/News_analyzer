@@ -158,7 +158,26 @@ async def automated_name(update: Update, context: ContextTypes.DEFAULT_TYPE, use
 
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(user_data, f, ensure_ascii=False, indent=4)
-    add_user_request(user_data['request'], user_data['city'], user_data['lat'], user_data['lng'], user_data['contact'])
+
+    api_url = "http://localhost:8000/v1/request_collection"  
+    
+    payload = {
+        "city": user_data['city'],
+        "explosion": False,  
+        "num_of_explosions": 0,
+        "damage": False,
+        "victims": False,
+        "num_of_victims": 0,
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(api_url, json=payload) as response:
+            if response.status == 200:
+                logger.info("Data inserted successfully via API")
+            else:
+                logger.error(f"Failed to insert data via API. Status: {response.status}")
+    
+    # add_user_request(user_data['request'], user_data['city'], user_data['lat'], user_data['lng'], user_data['contact'])
 
     return ConversationHandler.END
 

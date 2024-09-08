@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from src.modules.db.services import (
-    get_db_session, create_table, insert_region_info, 
+    get_db_session, create_region_table, create_user_request_table,insert_region_info, 
     get_all_region_info, delete_region_info, delete_all_region_info
 )
 from src.modules.api.v1.schemas import RegionInfoCreate, RegionInfo
@@ -16,9 +16,14 @@ async def generate_pipeline_response():
     return await service.get_pipeline_response()
 
 # db routes
-@router.post("/create_table")
+@router.post("/create_region_table")
 async def create_region_info_table(table_name: str = "region_info", db: AsyncSession = Depends(get_db_session)):
-    await create_table(db, table_name)
+    await create_region_table(db, table_name)
+    return {"message": "Table created successfully"}
+
+@router.post("/create_requests_table")
+async def create_requests_info_table(table_name: str = "requests_info", db: AsyncSession = Depends(get_db_session)):
+    await create_user_request_table(db, table_name)
     return {"message": "Table created successfully"}
 
 @router.post("/region_info")
